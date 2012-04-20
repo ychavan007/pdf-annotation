@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	@name: PDF Annotation: display annotation dialog (to insert or update annotation)
+	@date: 2012-04-20
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scroll" android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+<LinearLayout 
+	android:orientation="vertical" 
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content" 
+	android:weightSum="1">
+
+    
+	
+	<TextView android:id="@+id/textView1" android:layout_width="wrap_content" 
+	android:layout_height="wrap_content" ></TextView>
+
+	<TextView
+	    android:id="@+id/label_author_annotation"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="@string/ann_author" />
+
+	<EditText
+	    android:id="@+id/author_annotation"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:inputType="text" >
+	    <requestFocus />
+	</EditText>
+
+	<TextView
+	    android:id="@+id/label_subject_annotation"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="@string/ann_subject" />
+
+	<EditText
+	    android:id="@+id/subject_annotation"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:inputType="text" />
+	
+
+
+		<TextView
+		    android:id="@+id/label_text_annotation"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/ann_text"
+		     />
+
+	<EditText
+	    android:id="@+id/contents_annotation"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="top"
+	    android:inputType="text|textLongMessage|textMultiLine" >
+	</EditText>
+
+	<TableRow
+	    android:id="@+id/tableRow1"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:baselineAligned="false" >
+
+		<FrameLayout
+		    android:id="@+id/colorLayout"
+		    android:layout_width="40dp"
+		    android:layout_height="40dp"
+		    android:layout_margin="2dp"
+		    android:background="@color/yellow" >
+
+			<TextView
+			    android:id="@+id/color_number"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:inputType="number"
+			    android:text="0"
+			    android:visibility="invisible"
+			    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+		</FrameLayout>
+
+		<Button
+		    android:id="@+id/setColor"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/change_color" />
+
+		<TextView
+		    android:id="@+id/type_number"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="0"
+		    android:visibility="invisible"
+		    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+		<ImageView
+		    android:id="@+id/typeLayout"
+		    android:layout_width="40dp"
+		    android:layout_height="40dp"
+		    android:layout_margin="2dp"
+		    android:contentDescription="@string/change_type"
+		    android:src="@drawable/icon_comment" />
+
+	    <Button
+	        android:id="@+id/setType"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/change_type" />
+
+	</TableRow>
+
+	<TextView
+	    android:id="@+id/label_annot_size"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="@string/ann_size" />
+
+	<Spinner
+	    android:id="@+id/annot_size"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:entries="@array/size_array" />
+
+	<Button
+	    android:id="@+id/add_annotation"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/save_annotation" />
+
+	
+  </LinearLayout>
+  </ScrollView>
+    
+
+    
+ 

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	@name: PDF Annotation: display annotation view
+	@date: 2010-04-20
+-->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollView_default"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent" >
+        
+	<LinearLayout 
+	    android:id="@+id/annot_message"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:minWidth="250dp"
+	    android:orientation="vertical"
+	    android:paddingRight="10dp"
+	    android:paddingLeft="10dp"
+	    android:paddingBottom="10dp" >
+
+		<TextView
+		    android:id="@+id/annot_moddate"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_gravity="right"
+		    android:text="Moddate" />
+
+		<LinearLayout
+	        android:id="@+id/linearLayout_subject"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" >  
+	         
+		<TextView
+			android:id="@+id/annot_subject"
+			android:layout_width="wrap_content"
+			android:layout_height="25dp"
+			android:text="Subject"
+			android:textAppearance="?android:attr/textAppearanceMedium" />
+       
+		</LinearLayout>
+    
+
+   		<LinearLayout
+	        android:id="@+id/linearLayout_author"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/annot_author"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+
+            android:text="Author" />
+
+    	</LinearLayout>
+
+        <TextView
+        	android:id="@+id/annot_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ann_text" />
+        
+		</LinearLayout>
+
+</ScrollView>
