@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	@name: PDF Annotation: display annotation item of list
+	@date: 2010-04-20
+-->
+<LinearLayout android:id="@+id/LinearLayout01"
+        android:layout_width="fill_parent" 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:paddingLeft="10sp" 
+        android:paddingRight="10sp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" 
+        android:paddingTop="2sp">
+        
+        <LinearLayout android:id="@+id/LinearLayout_main"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent">
+               
+                
+        </LinearLayout> 
+        
+        <LinearLayout android:id="@+id/LinearLayout_datepage"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent">
+
+                <TextView
+	                android:id="@+id/itemDate"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_weight="0.8"
+	                android:text="date"
+	                android:textSize="13sp" />
+                
+	            <TextView
+	                android:id="@+id/itemPage"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_weight="0.2"
+	                android:text="page"
+	                android:textSize="13sp" />
+
+        </LinearLayout> 
+        
+        <LinearLayout android:id="@+id/LinearLayout_subject"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent">
+	            
+				<TextView
+                        android:id="@+id/itemSubject"
+                        android:layout_width="fill_parent"
+                        android:layout_height="18sp"
+                        android:text="Subject"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:typeface="sans" />
+            
+        </LinearLayout> 
+        
+        <LinearLayout android:id="@+id/LinearLayout_author"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent">
+
+
+            <TextView
+                android:id="@+id/itemAuthor"
+                android:layout_width="fill_parent"
+                android:layout_height="15sp"
+                android:text="@string/ann_author"
+                android:textSize="13sp" />
+
+        </LinearLayout> 
+        
+        <LinearLayout android:id="@+id/LinearLayout_contents"
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent">
+
+            	<TextView
+	                android:id="@+id/itemContents"
+	                android:layout_width="fill_parent"
+	                android:layout_height="49sp"
+	                android:text="@string/ann_text"
+	                android:textSize="13sp" />
+
+        </LinearLayout> 
+
+
+</LinearLayout>
