@@ -10,6 +10,7 @@ import cx.pdf.android.pdfview.Actions;
 import cx.pdf.android.pdfview.Bookmark;
 import cx.pdf.android.pdfview.BookmarkEntry;
 import cx.pdf.android.pdfview.Options;
+import cx.pdf.android.pdfview.Annotation;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -49,7 +50,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 	/**
 	 * Logging tag.
 	 */
-	private static final String TAG = "cx.hell.android.pdfview";
+	private static final String TAG = "cx.pdf.android.pdfview";
 	
 	/* Experiments show that larger tiles are faster, but the gains do drop off,
 	 * and must be balanced against the size of memory chunks being requested.
@@ -513,18 +514,56 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 	 * @param canvas
 	 */
 	public void drawAnnots(Canvas canvas) {
-		for (int page = 0; page < getPageCount(); page++) {
-			drawAnnotsPage(canvas, page);
+		int realPageNo = getCurrentPage(), cpage = 0;
+		int screenSize = (int) (this.height / (this.zoomLevel * 0.001f));
+		// compute number of last page on screen
+		while (screenSize > 0) {
+			realPageNo++;
+			screenSize -= getCurrentPageHeight(realPageNo);
 		}
+		
+		try {
+			// select file annotation from database
+			Cursor cursor = ((cx.pdf.android.pdfview.OpenFileActivity)activity).getAnnotsFromSQL(-1);
+			if (cursor != null && cursor.getCount() > 0) {
+				cursor.moveToFirst();
+				int aa = 0;
+				Log.i(TAG, "<" + getCurrentPage() + ";" + realPageNo + "> ");
+				do {
+					cpage = cursor.getInt(cursor.getColumnIndex("page"))-1;
+					aa++;
+					Log.i(TAG, "cpage " + cpage + " " + aa);
+					
+					// exist annotations on pages on screen?
+					if (cpage >= getCurrentPage() && cpage <= realPageNo) {
+						// draw annotation
+						drawAnnotsPage(canvas, cursor, cursor.getPosition());
+					}
+					
+				} while (cursor.moveToNext());
+				
+			} else {
+				Log.w(TAG, "No annotation found! ");	
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "Loading page annotation error: " + e);
+		}
+		
+		// search interval
+		// Log.i(TAG, "<" + getCurrentPage() + ";" + realPageNo + "> ");
+		
 	}
 	
 	/**
 	 * Draw annotation icon (by type) to PDF screen
 	 * @param canvas actual host to draw call
 	 */
-	public void drawAnnotsPage(Canvas canvas, int page) {
-		Point pagePosition = this.getPagePositionOnScreen(page);
-		Cursor cursor = null, appearance = null;
+	public void drawAnnotsPage(Canvas canvas, Cursor cursor, int position) {
+		cursor.moveToPosition(position);
+		int pageno = cursor.getInt(cursor.getColumnIndex("page"))-1;
+		Log.i(TAG, "pageno " + pageno);
+		Point pagePosition = this.getPagePositionOnScreen(pageno);
+		Cursor appearance = null;
 		float llx = 0, lly = 0, urx = 0, ury = 0;
 		float pagex = pagePosition.x, pagey = pagePosition.y;
 		String subtype = null;
@@ -540,20 +579,13 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 		Bitmap icon_move = BitmapFactory.decodeResource(getResources(), R.drawable.icon_move);
 		Bitmap icon_resize = BitmapFactory.decodeResource(getResources(), R.drawable.icon_resize);
 		Bitmap default_flag = flag_blue;
-		
-		// load annotations from database 
-		cursor = ((cx.pdf.android.pdfview.OpenFileActivity)activity).getAnnotsFromSQL(page);
 	
 		try {
-			if (cursor != null) {
-				if  (cursor.moveToFirst()) {
-			        do {
-			        	
-			            llx = cursor.getFloat(cursor.getColumnIndex("llx"));
-			            lly = cursor.getFloat(cursor.getColumnIndex("lly"));
-			            urx = cursor.getFloat(cursor.getColumnIndex("urx"));
-			            ury = cursor.getFloat(cursor.getColumnIndex("ury"));
-			            bdweight = cursor.getInt(cursor.getColumnIndex("bdweight"));
+			llx = cursor.getFloat(cursor.getColumnIndex("llx"));
+			lly = cursor.getFloat(cursor.getColumnIndex("lly"));
+			urx = cursor.getFloat(cursor.getColumnIndex("urx"));
+			ury = cursor.getFloat(cursor.getColumnIndex("ury"));
+			bdweight = cursor.getInt(cursor.getColumnIndex("bdweight"));
 			            
 			            // annotation flag icon
 			            flag = cursor.getInt(cursor.getColumnIndex("flag"));
@@ -564,7 +596,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 			            }
 			            subtype = cursor.getString(cursor.getColumnIndex("subtype"));
 			            
-			            int pageno = cursor.getInt(cursor.getColumnIndex("page"))-1;
+			            
 			            float llxz = llx * z + pagex;
 			            float urxz = urx * z + pagex;
 			            float llyz = (getCurrentPageHeight(pageno) - (lly * z)) + pagey;
@@ -724,10 +756,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 			            	// draw flag icon
 			            	canvas.drawBitmap(fresized, llxz, uryz + fsize, null);			            	 
 			            }*/
-			  
-			        } while (cursor.moveToNext());
-			    }
-			}
+			 
 		} catch (IllegalStateException e) {
 			Log.e(TAG, "Illegal State Exception: " + e);
 		}
@@ -1031,7 +1060,6 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 					y = (int)pagey0 - viewy0;
 					
 					getGoodTileSizes(tileSizes, pageWidth, pageHeight);
-					
 					for(int tileix = 0; tileix < (pageWidth + tileSizes[0]-1) / tileSizes[0]; ++tileix)
 						for(int tileiy = 0; tileiy < (pageHeight + tileSizes[1]-1) / tileSizes[1]; ++tileiy) {
 							
@@ -1209,7 +1237,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 			}
 			
 			movePosition = false;
-			invalidate();
+			invalidate(); //!!!!!
 		}
 	}
 	
@@ -1240,7 +1268,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 		}
 					
 		movePosition = true;
-		invalidate();
+		invalidate(); //!!!!!
 	}
 	
 	/**
@@ -1307,7 +1335,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 			       annotMode = false;
 			       annotPosId = -1;
 			       annotResId = -1;
-			       invalidate();
+			       invalidate(); // !!!!!
 		       }
 			       
 		   }
@@ -1410,7 +1438,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 					lastY = event.getY();
 				} else {
 					writePosition = true;
-					invalidate();
+					invalidate(); //!!!!!
 				}
 
 				//lastX = event.getX();
@@ -1462,7 +1490,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 		annotMode = true;
 		annotResId = action > 0 ? id : -1;
 		annotPosId = action > 0 ? -1 : id;
-		invalidate();
+		invalidate(); //!!!!!
 		return;
 	}
 	

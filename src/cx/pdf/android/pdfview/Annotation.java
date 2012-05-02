@@ -427,7 +427,7 @@ public class Annotation {
 				if ((cursor != null) && (cursor.getCount() > 0)) {
 					cursor.moveToFirst();
 				} else {
-					//Log.w(TAG, "No annotation into database.");
+					Log.w(TAG, "No annotation into database.");
 				}
 				
 				//cursor =  database.rawQuery(AnnotSql.ACAINNER, null);
