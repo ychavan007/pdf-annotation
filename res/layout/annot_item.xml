@@ -48,7 +48,7 @@
 				<TextView
                         android:id="@+id/itemSubject"
                         android:layout_width="fill_parent"
-                        android:layout_height="18sp"
+                        android:layout_height="22sp"
                         android:text="Subject"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -64,7 +64,7 @@
             <TextView
                 android:id="@+id/itemAuthor"
                 android:layout_width="fill_parent"
-                android:layout_height="15sp"
+                android:layout_height="19sp"
                 android:text="@string/ann_author"
                 android:textSize="13sp" />
 
