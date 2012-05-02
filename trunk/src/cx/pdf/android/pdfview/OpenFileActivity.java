@@ -795,7 +795,10 @@ public class OpenFileActivity extends Activity {
 					        		   // exit opened file activity
 					        		   if (exit == true) {
 					        			   OpenFileActivity.this.finish();
-					        		   }   
+					        		   } else {
+					        			   // successfully saved
+					        			   makeToast(R.string.file_saved);
+					        		   } 
 					        		
 					        	   } else {
 					        		   // save error!
@@ -817,6 +820,9 @@ public class OpenFileActivity extends Activity {
 					// exit opened file activity
 			    	if (exit == true) {
 			    		OpenFileActivity.this.finish();
+			    	} else {
+			    		// successfully saved
+	        			makeToast(R.string.file_saved);
 			    	}
 					dialog.dismiss();
 				}
@@ -1284,19 +1290,19 @@ public class OpenFileActivity extends Activity {
     		AlertDialog.Builder builder = new AlertDialog.Builder(OpenFileActivity.this);
     		builder.setMessage(R.string.save_annotation_before_exit)
     		       .setCancelable(true)
-    		       .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+    		       .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
     		           public void onClick(DialogInterface dialog, int id) {
     		        	   dialog.cancel();
     		        	   showSaveAsDialog(true);
     		           }
     		       })
-    		       .setNeutralButton("No", new DialogInterface.OnClickListener() {
+    		       .setNeutralButton(R.string.no, new DialogInterface.OnClickListener() {
     		           public void onClick(DialogInterface dialog, int id) {
     		                dialog.cancel();
     		                OpenFileActivity.this.finish();
     		           }
     		       })
-		    		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+		    		.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
 				       public void onClick(DialogInterface dialog, int id) {
 				            dialog.cancel();
 				       }
