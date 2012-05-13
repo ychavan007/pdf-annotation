@@ -1,4 +1,4 @@
-* LICENCE: *
+= LICENCE: =
 PDF Annotation je svobodný software, který je možno šířit a modifikovat dle ustanovení GNU General Public Licence vydané Free Software Foundation verze 3 této licence nebo kterékoli pozdější verze.
  
 Aplikace je založena na následujícím softwaru:
