@@ -1,4 +1,4 @@
-= 3. Ovládání aplikace =
+= Ovládání aplikace =
 
 Aplikace byla vyvýjena s důrazem na co největší intuitivitu ovládání
 uživatelského rozhraní. 
