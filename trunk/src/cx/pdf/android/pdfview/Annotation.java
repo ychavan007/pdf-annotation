@@ -31,6 +31,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils.InsertHelper;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -52,9 +53,8 @@ public class Annotation {
 	    private ArrayList<Annotation> annotations = new ArrayList<Annotation>();
 	    public int annotSize = 20; // default size value
 	    public SharedPreferences options = null;
-	    //SharedPreferences options = PreferenceManager.getDefaultSharedPreferences(this);
-	    //private int annotSize = Options.getIntFromString(options, Options.PREF_ANNOTSIZE, 20);
 	    private static String TAN = null, TACA = null, TAP = null, TCO = null;
+	    ArrayList<ArrayList<String>> annotationArrayListA = new ArrayList<ArrayList<String>>();
 	    
 	    /** Supported types of annotations. */
 	    public CharSequence[] TYPES = {
@@ -188,7 +188,6 @@ public class Annotation {
 			Cursor cursor = getAnnotById(id);
 			int flag = -1;
 			
-			//Log.i(TAG, "save new pos " + posX + " " + posY);
 			try {
 				cursor.moveToFirst();
 				flag = cursor.getInt(cursor.getColumnIndex("flag"));
@@ -202,11 +201,12 @@ public class Annotation {
 				break;
 				case 1 :
 					al = getXYPosition(id);
+					int ret = 0;
 					float llx = Float.parseFloat(al.get(0));
 					float lly = Float.parseFloat(al.get(1));
 					float urx = Float.parseFloat(al.get(2));
 					float ury = Float.parseFloat(al.get(3));
-					Log.i(TAG, "position id "+id+" " + llx +" "+lly+" "+ urx+" "+ ury);
+
 					if (llx > urx) {
 						values.put("llx", urx);
 						values.put("urx", llx);
@@ -216,6 +216,11 @@ public class Annotation {
 						values.put("lly", ury);
 						values.put("ury", lly);
 					}
+					
+					if (llx < urx && lly < ury) {
+						return;
+					}
+						
 					
 				break;
 				case 2 :
@@ -228,7 +233,6 @@ public class Annotation {
 				if (flag == 0) // flag(0) original
 					values.put("flag", 1); // flag(1) modified
 				
-				Log.i(TAG, "modified " + action + " id " + id);
 				// update position
 				database.update(TAN, values, "_id = " + id, null);	
 				
@@ -254,12 +258,12 @@ public class Annotation {
 			int type = Integer.parseInt(annotList.get(4));
 			int size = Integer.parseInt(annotList.get(5));
 			ContentValues values = new ContentValues();
+			
 
 			values.put("author", annotList.get(0));
 			values.put("subject", annotList.get(1));
 			values.put("contents", annotList.get(2));
 			values.put("moddate", getTimeStamp());
-			Log.i(TAG, "uprava poznamky " + flag);
 			
 			// insert new annotation to the database
 			if (objectid < 0 && flag != 2) {
@@ -279,7 +283,6 @@ public class Annotation {
 				values.put("objectid", -1); // new object without id
 				
 				// insert annotation
-				Log.i(TAG, "insert into " + TAN + " values: " + values.toString());
 				database.insert(TAN, null, values);
 				values.clear();
 				
@@ -289,26 +292,22 @@ public class Annotation {
 				values.put("bdweight", 2);
 				
 				// insert appearance
-				Log.i(TAG, "insert into " + TAP + " values: " + values.toString());
 				database.insert(TAP, null, values);
 
 			// update annotation at the database
 			} else {
-				Log.i(TAG, "update " + TCO + " values: " + values.toString());
 				database.update(TCO, values, "objectid = " + objectid + " AND _id = " + index, null);
 				values.clear();
 								
 				values.put("flag", (flag != 2) ? 1 : flag); // modified annotation flag(1)
 				values.put("type", type > -1 ? this.TYPES[type].toString() : "Note");
-				//Log.i(TAG, "update " + TAN + " values: " + values.toString() + " WHERE objectid = " + objectid + " AND _id = " + index);
 				database.update(TAN, values, "objectid = " + objectid + " AND _id = " + index, null);
 				values.clear();
 				
 				if (color > -1)	values.put("color", this.COLORS[color].toString());
 				values.put("bgcolor", "transparent");
 				
-				// insert appearance
-				//Log.i(TAG, "update " + TAP + " values: " + values.toString());
+				// update appearance
 				database.update(TAP, values, "objectid = " + objectid + " AND _id = " + index, null);
 			}
 			database.close();
@@ -319,56 +318,91 @@ public class Annotation {
 		 * Insert extracted annotations and appearance into SQLite database.
 		 * @param an extracted annotations
 		 */
-		private void insertExtractedAnnots (ArrayList<String> an) {
-			ContentValues anValues = new ContentValues();
-			//Log.i(TAG, "insertExtractedAnnots pageNo: " + an.get(13));
-			try {
-				// annotation array list size control
-				if (!an.isEmpty()) {
-					anValues.put("author", an.get(0));
-					anValues.put("subject", an.get(1));
-					anValues.put("contents", an.get(2));
-					anValues.put("moddate", an.get(10));
-					anValues.put("objectid", an.get(12));
-					// insert contents to database
-					Log.i(TAG, "insert into "+TCO+" "+anValues.toString());
-					database.insert(TCO, null, anValues);
-					anValues.clear();
-					
-					anValues.put("objectid", an.get(12));
-					anValues.put("page", an.get(14));
-					anValues.put("llx", an.get(6));
-					anValues.put("lly", an.get(7));
-					anValues.put("urx", an.get(8));
-					anValues.put("ury", an.get(9));
-					anValues.put("type", an.get(3));
-					anValues.put("subtype", an.get(4));
-					anValues.put("flag", an.get(11));
-					
-					// insert annotation to database
-					//Log.i(TAG, "insert into "+TAN+" "+anValues.toString());
-					database.insert(TAN, null, anValues);
-					anValues.clear();
-				
-					anValues.put("objectid", an.get(12));
-					anValues.put("color", an.get(5));
-					anValues.put("bgcolor", an.get(13));
-					anValues.put("bdweight", ((an.size() > 15) ? an.get(15) : "0"));
-						
-					// insert appearance to database
-					Log.i(TAG, "insert into "+TAP+" "+anValues.toString());
-					database.insert(TAP, null, anValues);
-					anValues.clear();
-
-					
-				} else {
-					Log.e(TAG, "Inserting extracted annots into database! ");
-				}
-
-			} catch (Exception e) {
-				Log.e(TAG, "insert extracted annots: " + e);
-			}
+		private void insertExtractedAnnots (ArrayList<ArrayList<String>> an) {
+			// long ts = System.currentTimeMillis();
 			
+	    	
+			// insert contents to database
+			InsertHelper tco = new InsertHelper(database, TCO);
+			try {
+				for (int o = 0; o < an.size(); o++) {
+					// get the InsertHelper ready to insert a single row
+					tco.prepareForInsert();
+		 
+		            // add the data for each column
+					tco.bind(tco.getColumnIndex("author"), an.get(o).get(0));
+					tco.bind(tco.getColumnIndex("subject"), an.get(o).get(1));
+					tco.bind(tco.getColumnIndex("contents"), an.get(o).get(2));
+					tco.bind(tco.getColumnIndex("moddate"), an.get(o).get(10));
+		            tco.bind(tco.getColumnIndex("objectid"), an.get(o).get(12));
+		 
+		            // insert the row into the database.
+		            tco.execute();
+		         }
+			    	
+			} catch (Exception e) {
+				Log.w(TAG, "Cannot insert annotation into database!" + e);
+			    	
+		    } finally {
+		    	tco.close();
+		    }
+			
+			// insert annotation to database
+			InsertHelper tan = new InsertHelper(database, TAN);
+			try {
+				for (int o = 0; o < an.size(); o++) {		 
+					// get the InsertHelper ready to insert a single row
+					tan.prepareForInsert();
+			 
+		            // add the data for each column
+					tan.bind(tan.getColumnIndex("objectid"), an.get(o).get(12));
+					tan.bind(tan.getColumnIndex("page"), an.get(o).get(14));
+					tan.bind(tan.getColumnIndex("llx"), an.get(o).get(6));
+					tan.bind(tan.getColumnIndex("lly"), an.get(o).get(7));
+					tan.bind(tan.getColumnIndex("urx"), an.get(o).get(8));
+					tan.bind(tan.getColumnIndex("ury"), an.get(o).get(9));
+					tan.bind(tan.getColumnIndex("type"), an.get(o).get(3));
+					tan.bind(tan.getColumnIndex("subtype"), an.get(o).get(4));
+					tan.bind(tan.getColumnIndex("flag"), an.get(o).get(11));
+		 
+		            // insert the row into the database.
+					tan.execute();
+		         }
+			    	
+			} catch (Exception e) {
+				Log.w(TAG, "Cannot insert annotation into database!" + e);
+			    	
+		    } finally {
+		    	tan.close();
+		    }
+			
+			
+			// insert appearance to database
+			InsertHelper tap = new InsertHelper(database, TAP);
+			try {
+				for (int o = 0; o < an.size(); o++) {		 
+					// get the InsertHelper ready to insert a single row
+					tap.prepareForInsert();
+			 
+		            // add the data for each column
+					tap.bind(tap.getColumnIndex("objectid"), an.get(o).get(12));
+					tap.bind(tap.getColumnIndex("color"), an.get(o).get(5));
+					tap.bind(tap.getColumnIndex("bgcolor"), an.get(o).get(13));
+					tap.bind(tap.getColumnIndex("bdweight"), ((an.get(o).size() > 15) ? an.get(o).get(15) : "2"));
+
+		            // insert the row into the database.
+					tap.execute();
+		         }
+			    	
+			} catch (Exception e) {
+				Log.w(TAG, "Cannot insert annotation into database!" + e);
+			    	
+		    } finally {
+		    	tap.close();
+		    }
+			   
+			// long te = System.currentTimeMillis();
+			// Log.i("time ", "TIME INEND " + (te-ts));
 			return;
 		}
 		
@@ -412,14 +446,11 @@ public class Annotation {
 			
 			try {
 				if (app) {
-					//Log.i(TAG, "get file annots: app");
 					// select appearance from SQLite database
 					cursor = database.query(TAP, null, "objectid = " + params[0], null, null, null, null);
 				} else if (page > -1) {
-					//Log.i(TAG, "get file annots: page: " + (page+1));
 					cursor =  database.rawQuery(AnnotSql.ACAINNER + " AND page = " + (page+1), null);
 				} else {
-					//Log.i(TAG, "get file annots: else");
 					// select annotations from SQLite database
 					cursor =  database.rawQuery(AnnotSql.ACAINNER, null);
 				}
@@ -427,11 +458,8 @@ public class Annotation {
 				if ((cursor != null) && (cursor.getCount() > 0)) {
 					cursor.moveToFirst();
 				} else {
-					Log.w(TAG, "No annotation into database.");
+					// Log.w(TAG, "No annotation into database.");
 				}
-				
-				//cursor =  database.rawQuery(AnnotSql.ACAINNER, null);
-				//Log.i(TAG, "count " + cursor.getCount());
 				
 			} catch (Exception e) {
 				Log.w(TAG, "Select annots from database: " + e);
@@ -582,13 +610,12 @@ public class Annotation {
 		        do {
 
 		        	if (cursor == null || cursor.getCount() < 1) {
-		        		// Log.i(TAG, "No annotations to save to this PDF file.");
+		        		// Log.w(TAG, "No annotations to save to this PDF file.");
 		        		break;
 		        	}
 		    		        	
 		        	/** annotation was edited flag(1) */
 		        	if (cursor.getInt(cursor.getColumnIndex("flag")) == 1) {
-		        		// Log.i(TAG, "edited: " + cursor.getInt(cursor.getColumnIndex("objectid")));
 				        PdfObject obj = (PdfObject) pdfReader.getPdfObject(
 				        		cursor.getInt(cursor.getColumnIndex("objectid")));
 
@@ -636,7 +663,6 @@ public class Annotation {
 				        
 				    /** annotation was inserted flag(2) */
 		        	} else if (cursor.getInt(cursor.getColumnIndex("flag")) == 2) {
-		        		// Log.i(TAG, "inserted: " + cursor.getString(cursor.getColumnIndex("subtype")));
 		        
 		        		// synchronize PDF page and cursor page
 		        		if (cursor != null) {
@@ -700,13 +726,14 @@ public class Annotation {
 						            // set subtype
 						            String subtype = cursor.getString(cursor.getColumnIndex("subtype"));
 						            if (subtype != null || subtype != "unknown") {
-						            	annotation.put(PdfName.SUBTYPE,  new PdfName(subtype));
+						            	annotation.put(PdfName.SUBTYPE, new PdfName(subtype));
 						            }
 						            
 						            // set subject
 						            String subject = cursor.getString(cursor.getColumnIndex("subject"));
 						            if (subject != null || subject != "unknown") {
-						            	annotation.put(new PdfName("Subj"),  new PdfString(subject));
+						            	annotation.put(new PdfName("Subj"), new PdfString(cursor.getString(cursor.getColumnIndex("subject")), 
+							            	PdfObject.TEXT_UNICODE));
 						            }
 						            
 					        // set date of modified
@@ -726,33 +753,33 @@ public class Annotation {
 				       
 				    /** annotation was deleted flag(3) */
 		        	} else if (cursor.getInt(cursor.getColumnIndex("flag")) == 3) {
-		        		Log.i(TAG, "deleted: " + cursor.getInt(cursor.getColumnIndex("objectid")));
+
 		        		PdfDictionary page;
 		        		PdfArray annotsArray;
-		        		// actual object identifier
-		        		PdfObject obj = (PdfObject) pdfReader.getPdfObject(
-	                			cursor.getInt(cursor.getColumnIndex("objectid")));
-		        		int pageNo = cursor.getInt(cursor.getColumnIndex("page"));
-		        		
-		                //for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
-		                   page = pdfReader.getPageN(pageNo);
-		                   annotsArray = page.getAsArray(PdfName.ANNOTS);
-		                   
-		                   if (annotsArray != null) {
-			                   for (int j = 0; j < annotsArray.size(); j++) {
-			                	   PdfIndirectReference ir = annotsArray.getAsIndirectObject(j);
-			                	   PdfObject o = pdfReader.getPdfObject(ir.getNumber());
-			                	   // delete annotation
-			                	   if (o.equals(obj)) {
-			                		   //Log.i(TAG, "object removed: " + annotsArray.getAsIndirectObject(j));
-			                		   annotsArray.remove(j);
-			                		   break;
-			                	   } 
-			                    }
-		                   } else {
-		                	  Log.w(TAG, "Delete annotation: null pointer");
-		                   }
-		                //}
+		        		try {
+			        		// actual object identifier
+			        		PdfObject obj = (PdfObject) pdfReader.getPdfObject(
+		                			cursor.getInt(cursor.getColumnIndex("objectid")));
+			        		int pageNo = cursor.getInt(cursor.getColumnIndex("page"));
+			        		
+			                   page = pdfReader.getPageN(pageNo);
+			                   annotsArray = page.getAsArray(PdfName.ANNOTS);
+			                   
+			                   if (annotsArray != null) {
+				                   for (int j = 0; j < annotsArray.size(); j++) {
+				                	   PdfIndirectReference ir = annotsArray.getAsIndirectObject(j);
+				                	   PdfObject o = pdfReader.getPdfObject(ir.getNumber());
+				                	   // delete annotation
+				                	   if (o.equals(obj)) {
+				                		   annotsArray.remove(j);
+				                		   break;
+				                	   } 
+				                    }
+			                   } 
+			                   
+		        		} catch (Exception e) {
+		        			Log.w(TAG, "Delete annotation: null pointer " + e);
+		        		}
 	
 		        	}
 
@@ -878,10 +905,13 @@ public class Annotation {
 		 */
 	    private void extractFromAllPages () {
 	        int totalPages = reader.getNumberOfPages();
+	        annotationArrayListA.clear();
+	        
 	        // do not change this !!!
 	        for (int pageNo = 1; pageNo <= totalPages; pageNo++) {
 	        	this.extract(pageNo);
 	        }
+	        insertExtractedAnnots(annotationArrayListA);
 	        
 			// close database connection
 			// database.close(); 
@@ -936,7 +966,6 @@ public class Annotation {
             		break;
             	
             	}
-            	//Log.i("annot", "color: " + color);
                 return color;
 	    }
 	    
@@ -960,7 +989,7 @@ public class Annotation {
 				Pattern p = Pattern.compile("(\\d+)(\\s+)(.*)"); // for example: 155 0 R
 				Matcher m = p.matcher(itob.toString());
 				if (m.find()) {
-				   //Log.i(TAG, "pattern: " + m.group(1));
+
 				   return m.group(1);
 				    	
 				} else {
@@ -979,7 +1008,7 @@ public class Annotation {
 	     * @param pageNumber number of page
 	     */
 		private void extract (int pageNumber) {
-			ArrayList<String> annotationArrayList = new ArrayList<String>();
+
 			
 			PdfDictionary page = reader.getPageN(pageNumber);
 			
@@ -994,6 +1023,7 @@ public class Annotation {
 		    for (Iterator<PdfObject> i = annots.listIterator(); i.hasNext();) {
 		    	PdfObject itob = (PdfObject) i.next();
 		     	PdfDictionary annot = (PdfDictionary) PdfReader.getPdfObject(itob);
+		     	ArrayList<String> annotationArrayList = new ArrayList<String>();
 		     	
 		        // check subtype of annotation (supported: text, square, circle)
 		        if (isSubtypeSupported(annot)) {
@@ -1024,25 +1054,20 @@ public class Annotation {
 			        	
 			        	annotationArrayList.add(annot.getAsString(PdfName.CONTENTS).toUnicodeString()); // (2) text
 			        } catch (Exception e) {
-			          	//Log.w(TAG, "Contents: " + e);
 			          	annotationArrayList.add("unknown");
 			        }
 			            
 			        /** get type */
 			        try {
 			        	annotationArrayList.add(annot.get(PdfName.NAME).toString().replace("/", "")); // (3) type
-			           	//Log.i("annot", "type: " + annot.get(PdfName.NAME).toString().replace("/", ""));
 			        } catch (Exception e) {
-			          	//Log.w(TAG, "Exception: " + e);
 			          	annotationArrayList.add("Note");
 			        }
 			        
 			        /** get subtype */
 			        try {
 			        	annotationArrayList.add(annot.get(PdfName.SUBTYPE).toString().replace("/", "")); // (4) subtype
-			           //	Log.i("annot", "subtype: " + annot.get(PdfName.SUBTYPE).toString().replace("/", ""));
 			        } catch (Exception e) {
-			          	//Log.w(TAG, "Subtype exception: " + e);
 			          	annotationArrayList.add("Text");
 			        }
 			            
@@ -1057,7 +1082,6 @@ public class Annotation {
 	                float urx = rectArr.getAsNumber(2).floatValue();
 	               	float ury = rectArr.getAsNumber(3).floatValue();
 
-			        //Log.i("annot", "rect: [" + llx + ", " + lly + ", " + urx + ", " + ury + "]");
 	               	annotationArrayList.add(Float.toString(llx)); // (6) rectangle
 	               	annotationArrayList.add(Float.toString(lly));
 	               	annotationArrayList.add(Float.toString(urx));
@@ -1065,7 +1089,7 @@ public class Annotation {
 				    
 				    try {
 				    	annotationArrayList.add(annot.get(PdfName.M).toString()); // (10) date of annotation modified
-			           	//Log.i("annot", "date: " + annot.get(PdfName.M).toString());
+
 			        } catch (Exception e) {
 			           	Log.w(TAG, "Author: " + e);
 			           	annotationArrayList.add("unknown");
@@ -1079,7 +1103,6 @@ public class Annotation {
 
 				    /** set appearance */
 				    // appearance supported for circle and square only
-				   // Log.i(TAG, "Subtype+: " + annot.get(PdfName.SUBTYPE).toString().replace("/", ""));
 			    	if (getSubtypeNum((annot.get(PdfName.SUBTYPE)).toString().replace("/", "")) > 0) {
 			    		annotationArrayList.add(getPdfColor(annot, new PdfName("IC"))); // AP(13) background color
 			    	} else {
@@ -1097,12 +1120,13 @@ public class Annotation {
 			        		borderWeight = border.getAsNumber(2).intValue();
 		        		}
 		        		annotationArrayList.add(Integer.toString(borderWeight)); // AP(15) border weight
+		        	} else {
+		        		annotationArrayList.add("2"); // AP(15) border weight
 		        	}
-				    
-			        // insert extracted informations to database
-			        insertExtractedAnnots(annotationArrayList);
-			        
-			        annotationArrayList.clear(); // clear annotation array list
+		        	
+		        	// insert extracted informations
+		        	annotationArrayListA.add(annotationArrayList);
+			        // annotationArrayList.clear(); // clear annotation array list
 			        
 		        } else {
 		          	// unknown subtype of annotation

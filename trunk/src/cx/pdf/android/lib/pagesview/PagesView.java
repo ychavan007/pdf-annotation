@@ -10,7 +10,6 @@ import cx.pdf.android.pdfview.Actions;
 import cx.pdf.android.pdfview.Bookmark;
 import cx.pdf.android.pdfview.BookmarkEntry;
 import cx.pdf.android.pdfview.Options;
-import cx.pdf.android.pdfview.Annotation;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -519,7 +518,10 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 		// compute number of last page on screen
 		while (screenSize > 0) {
 			realPageNo++;
-			screenSize -= getCurrentPageHeight(realPageNo);
+			if (realPageNo < this.getPageCount())
+				screenSize -= getCurrentPageHeight(realPageNo);
+			else
+				break;
 		}
 		
 		try {
@@ -527,12 +529,8 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 			Cursor cursor = ((cx.pdf.android.pdfview.OpenFileActivity)activity).getAnnotsFromSQL(-1);
 			if (cursor != null && cursor.getCount() > 0) {
 				cursor.moveToFirst();
-				int aa = 0;
-				Log.i(TAG, "<" + getCurrentPage() + ";" + realPageNo + "> ");
 				do {
 					cpage = cursor.getInt(cursor.getColumnIndex("page"))-1;
-					aa++;
-					Log.i(TAG, "cpage " + cpage + " " + aa);
 					
 					// exist annotations on pages on screen?
 					if (cpage >= getCurrentPage() && cpage <= realPageNo) {
@@ -543,7 +541,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 				} while (cursor.moveToNext());
 				
 			} else {
-				Log.w(TAG, "No annotation found! ");	
+				// Log.w(TAG, "No annotation found! ");	
 			}
 		} catch (Exception e) {
 			Log.e(TAG, "Loading page annotation error: " + e);
@@ -561,17 +559,11 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 	public void drawAnnotsPage(Canvas canvas, Cursor cursor, int position) {
 		cursor.moveToPosition(position);
 		int pageno = cursor.getInt(cursor.getColumnIndex("page"))-1;
-		Log.i(TAG, "pageno " + pageno);
 		Point pagePosition = this.getPagePositionOnScreen(pageno);
-		Cursor appearance = null;
+		//Cursor appearance = null;
 		float llx = 0, lly = 0, urx = 0, ury = 0;
 		float pagex = pagePosition.x, pagey = pagePosition.y;
 		String subtype = null;
-		float z = (this.scaling0 * (float)this.zoomLevel * 0.001f);
-		int fsize = (int) (10 * z), asize = (int) (22 * z), flag = 0, bdweight = 0;
-		
-		// flag size controller
-		if (fsize < 1) return;
 		// bitmaps represents annotations
 		Bitmap flag_red = BitmapFactory.decodeResource(getResources(), R.drawable.icon_flag_red);
 		Bitmap flag_blue = BitmapFactory.decodeResource(getResources(), R.drawable.icon_flag_blue);
@@ -579,6 +571,13 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 		Bitmap icon_move = BitmapFactory.decodeResource(getResources(), R.drawable.icon_move);
 		Bitmap icon_resize = BitmapFactory.decodeResource(getResources(), R.drawable.icon_resize);
 		Bitmap default_flag = flag_blue;
+				
+		float z = (this.scaling0 * (float)this.zoomLevel * 0.001f);
+		int fsize = (int) (10 * z), asize = (int) (22 * z), flag = 0, bdweight = 0;
+		
+		// flag size controller
+		if (fsize < 1) return;
+		
 	
 		try {
 			llx = cursor.getFloat(cursor.getColumnIndex("llx"));
@@ -632,11 +631,11 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 				            Paint paintStroke = setPaint(cursor, Paint.Style.STROKE, "color", bdweight, 0);
 				            Paint paintFill = null, editPaint = null;
 				            // load appearance from database
-			        		appearance = ((cx.pdf.android.pdfview.OpenFileActivity)activity)
+			        		/*appearance = ((cx.pdf.android.pdfview.OpenFileActivity)activity)
 			        			.getAnnotsFromSQL(cursor.getInt(cursor.getColumnIndex("objectid")));
 				            if (appearance != null && appearance.moveToFirst()) {
 					            paintFill = setPaint(appearance, Paint.Style.FILL, "bgcolor", bdweight, 0);				            
-				            }
+				            }*/
 
 				            
 				            RectF oval = new RectF();
@@ -710,9 +709,9 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 				            	}
 					            break;
 				            case 1: // circle annotation
-				            	if (paintFill != null) {
+				            	/*if (paintFill != null) {
 				            		canvas.drawOval(oval, paintFill);
-				            	}
+				            	}*/
 				            	if (paintStroke != null) {
 				            		canvas.drawOval(oval, paintStroke);
 				            	}
@@ -731,8 +730,8 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 				            	}
 				            	break;
 				            case 2: // square annotation
-				            	if (paintFill != null)
-				            		canvas.drawRect(oval, paintFill);
+				            	/*if (paintFill != null)
+				            		canvas.drawRect(oval, paintFill);*/
 				            	if (paintStroke != null)
 				            		canvas.drawRect(oval, paintStroke);
 				            	/*if (editPaint != null)
@@ -838,6 +837,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
         	paint.setPathEffect(new DashPathEffect(new float[] {5, 10}, 0));
         	break;
         }
+
         paint.setStrokeWidth(bdweight*z);
         
         return paint;
@@ -1219,7 +1219,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 			while (-event.getY() + pagey + pagePosition(realPageNo) < 0) {
 				realPageNo++;
 			}
-			Log.i(TAG, "realPageNo " + realPageNo + realPageNumber);
+
 			float dx = (event.getX()-pagex-changeAbleW/2)/z;
 			float dy = (-event.getY() + pagey + pagePosition(realPageNo) - changeAbleH/2)/z - (MARGIN_Y)/this.scaling0;
 
@@ -1228,7 +1228,7 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 				if (annotPosId > -1) {
 					((cx.pdf.android.pdfview.OpenFileActivity)activity).saveNewAnnotPos(
 						this.annotPosId, dx, dy, 0);
-					Log.i(TAG, "real  db: x: " + dx + " y: " + dy);
+
 				// update size of annotation (circle or square only)
 				} else {
 					((cx.pdf.android.pdfview.OpenFileActivity)activity).saveNewAnnotPos(
@@ -1287,18 +1287,19 @@ View.OnTouchListener, OnImageRenderedListener, View.OnKeyListener {
 		
 			if  (cursor.moveToFirst()) {
 		        do {
-		            page = getCurrentPageHeight(cursor.getInt(cursor.getColumnIndex("page"))-1);
-		            preSize = pagePosition(cursor.getInt(cursor.getColumnIndex("page"))-1);
-		            llx = cursor.getFloat(cursor.getColumnIndex("llx"));
-		            lly = cursor.getFloat(cursor.getColumnIndex("lly"));
-		            urx = cursor.getFloat(cursor.getColumnIndex("urx"));
-		            ury = cursor.getFloat(cursor.getColumnIndex("ury"));
-		            
-		            if (touchPositionControl(event, llx, lly, urx, ury, z, page, preSize, pagex, pagey)) {
-		            	this.annotTime = System.currentTimeMillis();
-		            	cposition = cursor.getPosition();
-		            }
-		            
+		        	if (cursor.getInt(cursor.getColumnIndex("flag")) != 3) {
+			            page = getCurrentPageHeight(cursor.getInt(cursor.getColumnIndex("page"))-1);
+			            preSize = pagePosition(cursor.getInt(cursor.getColumnIndex("page"))-1);
+			            llx = cursor.getFloat(cursor.getColumnIndex("llx"));
+			            lly = cursor.getFloat(cursor.getColumnIndex("lly"));
+			            urx = cursor.getFloat(cursor.getColumnIndex("urx"));
+			            ury = cursor.getFloat(cursor.getColumnIndex("ury"));
+			            
+			            if (touchPositionControl(event, llx, lly, urx, ury, z, page, preSize, pagex, pagey)) {
+			            	this.annotTime = System.currentTimeMillis();
+			            	cposition = cursor.getPosition();
+			            }
+		        	}
 		        } while (cursor.moveToNext());
 		    }
 		}

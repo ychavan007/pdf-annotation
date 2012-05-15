@@ -67,7 +67,7 @@ public class AnnotationListActivity extends Activity {
         		cursor.getInt(cursor.getColumnIndex("_id"))
         	));
     	} else {
-    		Log.w(TAG, "No annotations to show list (only deleted)");
+    		Log.w(TAG, "No annotations to show list (only deleted) " + cursor.getString(cursor.getColumnIndex("flag")));
     	}
 		return null;
 	}
@@ -86,6 +86,7 @@ public class AnnotationListActivity extends Activity {
 			// open database
 	        datasource.open();
 	        Cursor cursor = datasource.getFileAnnots(-1);
+	        datasource.close();
 	        
 	        if (cursor == null) {
 	        	Log.w(TAG, "No annotations to show list");
@@ -100,13 +101,14 @@ public class AnnotationListActivity extends Activity {
 				} while (!cursor.isAfterLast());
 	        }
 	        
+	     
+	        
         } catch (Exception e) {
         	datasource.close();
         	Log.w(TAG, "Select annotations: " + e);
         }
 		
-		// close database
-        datasource.close();
+		
         
         final AnnotationListAdapter adapter = new AnnotationListAdapter(this, listOfAnnotations);
         

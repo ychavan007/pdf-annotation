@@ -25,7 +25,7 @@ public class PDFPagesProvider extends PagesProvider {
 	/**
 	 * Const used by logging.
 	 */
-	private final static String TAG = "cx.hell.android.pdfview";
+	private final static String TAG = "cx.pdf.android.pdfview";
 
 	/* render a little more than twice the screen height, so the next page will be ready */
 	private float renderAhead = 2.1f;
