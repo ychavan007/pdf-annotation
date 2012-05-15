@@ -289,9 +289,10 @@ public class AnnotationActivity extends Activity {
 		    
     		// pre-fill author field
 			if (userName != null) {
-				//Log.i(TAG, "vyplnuju: " + userName);
 				getInputText(R.id.author_annotation).setText(userName);
 			}
+			
+			 findViewById(R.id.contents_annotation).requestFocus();
 			
 	        // set type is possible for text annotation only
 	        if (extras.getInt("subtype") > 0) {
@@ -300,6 +301,10 @@ public class AnnotationActivity extends Activity {
 	        	ImageView LimageView = (ImageView) findViewById(R.id.typeLayout);
 	        	LimageView.setVisibility(View.GONE);
 	        }
+	        
+	        // set color
+	        final FrameLayout annotationColor = (FrameLayout) findViewById(R.id.colorLayout);
+	        annotationColor.setBackgroundColor(Color.parseColor("#ffff00"));
 	        	
     	}
 
@@ -316,6 +321,7 @@ public class AnnotationActivity extends Activity {
             	// annotation subject
             	EditText subject = getInputText(R.id.subject_annotation);
             	String Asubject = subject.getText().toString();
+            	
             	
             	// contents subject
             	EditText contents = getInputText(R.id.contents_annotation);
@@ -334,7 +340,7 @@ public class AnnotationActivity extends Activity {
             	// if (Aauthor.isEmpty() || Acontents.isEmpty() || Asubject.isEmpty()) {
                 
             	// checking if user did not fill out all required fields
-            	if (Aauthor == null || Acontents == null || Asubject == null) {
+            	if (Acontents.equals("")) {
             		Toast.makeText(getApplicationContext(), R.string.filled_required_fields, Toast.LENGTH_SHORT).show();
             	} else { 
             		insertAnnotation(createList(Aauthor, Asubject, Acontents, Acolor, Atype, Asize, objectID, flagID, dbID, subType, page));

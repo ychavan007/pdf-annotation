@@ -12,6 +12,7 @@ import cx.pdf.android.pdfview.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Path;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,7 +39,7 @@ public class ChooseFileActivity extends Activity implements OnItemClickListener 
 	/**
 	 * Logging tag.
 	 */
-	private final static String TAG = "cx.hell.android.pdfview";
+	private final static String TAG = "cx.pdf.android.pdfview";
 	private final static String PREF_TAG = "ChooseFileActivity";
 	private final static String PREF_HOME = "Home";
 	
@@ -124,6 +125,20 @@ public class ChooseFileActivity extends Activity implements OnItemClickListener 
 				tv.setTypeface(tv.getTypeface(), 
 						entry.getType() == FileListEntry.RECENT ? Typeface.ITALIC :
 							Typeface.NORMAL);
+				
+				TextView tm = (TextView)v.findViewById(R.id.small);
+				try {
+					if ((entry.getType() == FileListEntry.RECENT) && (!entry.isDirectory())) {
+						tm.setText(entry.getFile().getParent());
+					} else {
+						tm.setText("");
+					}
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					// e.printStackTrace();
+					Log.w("File", "Get path " + e);
+				}
 
 				return v;
 			}				
@@ -205,7 +220,6 @@ public class ChooseFileActivity extends Activity implements OnItemClickListener 
     }
     
     public void pdfView(File f) {
-		Log.i(TAG, "post intent to open file " + f);
 		Intent intent = new Intent();
 		intent.setDataAndType(Uri.fromFile(f), "application/pdf");
 		intent.setClass(this, OpenFileActivity.class);

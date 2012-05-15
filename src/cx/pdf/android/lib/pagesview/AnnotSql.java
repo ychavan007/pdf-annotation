@@ -34,7 +34,7 @@ public class AnnotSql extends SQLiteOpenHelper {
 			+ " lly float, " // lower left y position
 			+ " urx float, " // upper right x position
 			+ " ury float, " // upper right y position
-			+ " flag integer " // annotation flag: original(0), modified(1), new(2)
+			+ " flag integer " // annotation flag: original(0), modified(1), new(2), deleted(3)
 			+ ");";
 	
 	/** SQLite statement for create table of  */

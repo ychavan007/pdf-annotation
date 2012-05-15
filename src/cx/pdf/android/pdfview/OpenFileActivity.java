@@ -3,7 +3,11 @@
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -58,7 +62,7 @@ import cx.pdf.android.lib.pagesview.PagesView;
  */
 public class OpenFileActivity extends Activity {
 	
-	private final static String TAG = "cx.hell.android.pdfview";
+	private final static String TAG = "cx.pdf.android.pdfview";
 	
 	private final static int[] zoomAnimations = {
 		R.anim.zoom_disappear, R.anim.zoom_almost_disappear, R.anim.zoom
@@ -148,6 +152,11 @@ public class OpenFileActivity extends Activity {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	long ts = System.currentTimeMillis();
+    	// Log.i("time", "TIME START " + ts);
+    	
+
+
         super.onCreate(savedInstanceState);
         
 		Options.setOrientation(this);
@@ -228,6 +237,9 @@ public class OpenFileActivity extends Activity {
         		fadePage();
         	}
         };
+        
+        long te = System.currentTimeMillis();
+    	// Log.i("time", "TIME END " + (te-ts));
 
     }
    
@@ -245,9 +257,12 @@ public class OpenFileActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		
+		pagesView.setFilePath(filePath);
+		
 		Options.setOrientation(this);
 		
 		SharedPreferences options = PreferenceManager.getDefaultSharedPreferences(this);
+		String memFile = filePath;
 
 		boolean eink = options.getBoolean(Options.PREF_EINK, false);
 		this.pagesView.setEink(eink);
@@ -308,6 +323,8 @@ public class OpenFileActivity extends Activity {
 		this.zoomLayout.setVisibility(zoomAnim == null ? View.GONE : View.VISIBLE);
         
         showAnimated(true);
+        filePath = memFile;
+
 	}
 
     /**
@@ -729,9 +746,10 @@ public class OpenFileActivity extends Activity {
      * Confirm save annotation to PDF file
      * @param oldFile name of old file
      * @param newFile name of new file
+     * @param reset flag
      * @return
      */
-    private boolean confirmedSaveToFile (File oldFile, File newFile) {
+    private boolean confirmedSaveToFile (File oldFile, File newFile, boolean resetFlag) {
     	final Annotation datasource = new Annotation(this);
     	boolean confirm = false;
     	
@@ -740,7 +758,7 @@ public class OpenFileActivity extends Activity {
 			// save annotation to PDF file
 			confirm = datasource.saveAnnotToFile(oldFile, newFile);
 			// actualize annotations
-			if (confirm) {
+			if (confirm && resetFlag) {
 				datasource.actualizeAnnots();
 			}
 			
@@ -780,9 +798,10 @@ public class OpenFileActivity extends Activity {
 
 				final File oldFile = new File(filePath);
 				final File newFile = new File(oldFile.getParent() + "/" + fileText.getText().toString() + ".pdf");
-
+				final String nFilePath = newFile.getAbsolutePath();
 				// new file exists, overwrite?
 				if (newFile.exists()) {
+					
 					AlertDialog.Builder adbuilder = new AlertDialog.Builder(OpenFileActivity.this);
 					adbuilder.setMessage(R.string.overwrite_file)
 					       .setCancelable(true)
@@ -790,8 +809,20 @@ public class OpenFileActivity extends Activity {
 					           public void onClick(DialogInterface ddialog, int id) {
 					        	   ddialog.dismiss(); // close overwrite dialog
 					        	   dialog.dismiss(); // close file name dialog
+					        	   
+					        	   // actualize file path
+									filePath = nFilePath;
+									pagesView.setFilePath(filePath);
+									
+									// recent files
+									if (nFilePath.compareToIgnoreCase(oldFile.getAbsolutePath()) != 0) {
+										Recent recent = new Recent(OpenFileActivity.this);
+										recent.add(0, filePath);
+										recent.commit();
+						        	}
+					        	   
 					        	   // save document to specified file
-					        	   if (confirmedSaveToFile(oldFile, newFile)) {
+					        	   if (confirmedSaveToFile(oldFile, newFile, true)) {
 					        		   // exit opened file activity
 					        		   if (exit == true) {
 					        			   OpenFileActivity.this.finish();
@@ -816,7 +847,17 @@ public class OpenFileActivity extends Activity {
 					alertDialog.show();
 					
 				} else {
-					confirmedSaveToFile(oldFile, newFile); 
+					confirmedSaveToFile(oldFile, newFile, true); 
+					// actualize file path
+					filePath = nFilePath;
+					pagesView.setFilePath(filePath);
+					
+					// recent files
+					if (nFilePath.compareToIgnoreCase(oldFile.getAbsolutePath()) != 0) {
+						Recent recent = new Recent(OpenFileActivity.this);
+						recent.add(0, filePath);
+						recent.commit();
+		        	}
 					// exit opened file activity
 			    	if (exit == true) {
 			    		OpenFileActivity.this.finish();
@@ -826,6 +867,9 @@ public class OpenFileActivity extends Activity {
 			    	}
 					dialog.dismiss();
 				}
+				
+				
+				
 			}
     	});
     	
@@ -1146,6 +1190,7 @@ public class OpenFileActivity extends Activity {
     		        		// delete annotation from database
     		          		datasource.open();
     		          		datasource.deleteAnnotation(cursor.getInt(cursor.getColumnIndex("_id")));
+    		          		datasource.close();
     		          		
     		          		// show toast
     		          		makeToast(R.string.annotation_deleted);
