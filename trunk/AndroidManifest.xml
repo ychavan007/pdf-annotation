@@ -2,17 +2,19 @@
 <!-- 
 	@name: Android Manifest
 	@info: PDF Annotation: inserted two new activity and permission to get accounts
+	                       and external storage
 	@date: 2010-04-20
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="cx.pdf.android.pdfview"
-        android:versionCode="115" 
-        android:versionName="1.1.15"><!-- 0.3.1dev7 -->
+        android:versionCode="121" 
+        android:versionName="1.1.21"><!-- APV 0.3.1dev7 -->
 
     <!-- android:installLocation="auto" since Android 2.3 -->
     <!-- 3 is 1.5 or later, that's more than 99% of devices, 7 is 2.1 and 98% devices -->
 	<uses-sdk android:minSdkVersion="7" />
 	<uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 	<supports-screens
             android:smallScreens="true"
